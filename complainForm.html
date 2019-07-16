@@ -1,11 +1,31 @@
 
-Enter your reason: <input type=text id=reasonText><input type=button onClick="document.getElementById('reason').innerText = document.getElementById('reasonText').value" value="Update">
+<p>Your Name: <input id=senderNameText type=text>
+<p>Your Email: <input id=senderEmailText type=text>
+<p>Enter your reason: 
+<p><textarea cols=50 rows=8 id=reasonText></textarea>
+<p><input type=button onClick="document.getElementById('reason').innerText = document.getElementById('reasonText').value;document.getElementById('senderName').innerText = document.getElementById('senderNameText').value;document.getElementById('senderEmail').innerText = document.getElementById('senderEmailText').value;" value="Update">
 
 
 <p>
-Dear Sir/Madam,
+敬啟者：
 <p>
-I would like to complain about your shopping mall because <span id=reason></span>.
+<p align=center>投訴新城市廣場管理不善事宜</p>
 <p>
-Regards,<br>
-Steven
+&nbsp;&nbsp;&nbsp;&nbsp;本人於2019年7月14日到臨　貴公司旗下新城市廣場購物，唯遇上不愉快經驗，故特來函投訴，以望貴公司能清楚回覆，準確改進。
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;<span id=reason></span>
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;貴公司既屬上市公司，又為香港地產業翹楚，請妥為解答，尋求具體可行的解釋及處理方便，以便我等沙田居民對　貴公司重拾信心。
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;此致<br>
+新鴻基地產發展有限公司相關負責人<br>
+<p>
+<p align=right>香港市民</span>
+<br><span align=right id=senderName></span>
+<p>
+<script>document.write(new Date().getFullYear());</script>年
+<script>document.write(new Date().getMonth()+1);</script>月
+<script>document.write(new Date().getDate());</script>日
+<p>
+覆函電郵地址：
+<br><span id=senderEmail></span>
