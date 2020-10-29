@@ -1,17 +1,41 @@
 <table>
 <tr>
 <td>Marie
-<td>
+<td id=num1>
 <tr>
 </tr>
 <td>Priscilla
-<td>
+<td id=num2>
 <tr>
 <td>Twinkle
-<td>
+<td id=num3>
 </tr>
 <tr>
 <td>Vaishali
-<td>
+<td id=num4>
 </tr>
 </table>
+<p>
+<script>
+
+function gen() {
+var nums = [1,2,3,4,],
+    ranNums = [],
+    i = nums.length,
+    j = 0;
+
+while (i--) {
+    j = Math.floor(Math.random() * (i+1));
+    ranNums.push(nums[j]);
+    nums.splice(j,1);
+}
+
+console.log(ranNums);
+
+  document.getElementById("num1").innerText = ranNums[0];
+  document.getElementById("num2").innerText = ranNums[1];
+  document.getElementById("num3").innerText = ranNums[2];
+  document.getElementById("num4").innerText = ranNums[3];
+}
+</script>
+<input type=button onClick="gen()" value="Press">
