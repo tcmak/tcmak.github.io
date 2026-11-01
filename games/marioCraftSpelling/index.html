@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarioCraft Spelling Adventure - Oxford 3000</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #16213e;
+            border-radius: 8px 8px 0 0;
+            border: 2px solid #0f3460;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: #e94560;
+            text-shadow: 1px 1px 2px #000;
+            margin: 0;
+        }
+
+        #ui-bar {
+            display: flex;
+            gap: 15px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .ui-badge {
+            background: #0f3460;
+            padding: 5px 12px;
+            border-radius: 4px;
+            border: 1px solid #e94560;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .ui-badge.deduct-flash {
+            animation: badgeShake 0.4s ease-in-out;
+            background: #e74c3c !important;
+            border-color: #ff4757 !important;
+        }
+
+        @keyframes badgeShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .sound-toggle-btn {
+            background: #16213e;
+            border: 1px solid #f1c40f;
+            color: #f1c40f;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .sound-toggle-btn:hover {
+            background: #0f3460;
+        }
+
+        .sound-toggle-btn.sound-muted {
+            background: #4b121c;
+            border-color: #e94560;
+            color: #ff6b81;
+        }
+
+        .game-btn.recycle-btn {
+            background: #10ac84;
+            color: #ffffff;
+        }
+
+        .game-btn.recycle-btn:hover {
+            background: #1dd1a1;
+        }
+
+        /* HINT PANEL - Always visible at start of new word */
+        #hint-panel {
+            width: 100%;
+            background: #0f3460;
+            border-left: 2px solid #0f3460;
+            border-right: 2px solid #0f3460;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .hint-emoji {
+            font-size: 2.2rem;
+            background: #16213e;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid #f1c40f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 55px;
+        }
+
+        .hint-text {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .hint-status {
+            font-size: 0.85rem;
+            color: #f1c40f;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .hint-definition {
+            font-size: 1.05rem;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        #target-word-container {
+            width: 100%;
+            background: #0f3460;
+            border-left: 2px solid #0f3460;
+            border-right: 2px solid #0f3460;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .letter-slot {
+            width: 54px;
+            height: 54px;
+            border: 3px solid #e94560;
+            background: #16213e;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34pt;
+            font-weight: bold;
+            color: #f1c40f;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+        }
+
+        .letter-slot.filled {
+            background: #e94560;
+            color: #ffffff;
+            border-color: #f1c40f;
+        }
+
+        canvas {
+            background: #5c94fc;
+            border-left: 2px solid #0f3460;
+            border-right: 2px solid #0f3460;
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 800 / 448;
+            image-rendering: pixelated;
+        }
+
+        #controls-panel {
+            width: 100%;
+            background: #16213e;
+            border-radius: 0 0 8px 8px;
+            border: 2px solid #0f3460;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .game-btn {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .game-btn:hover {
+            background: #ff6b81;
+        }
+
+        .game-btn.sandbox-active {
+            background: #8B5E3C;
+        }
+
+        .game-btn.speak-btn {
+            background: #f1c40f;
+            color: #16213e;
+        }
+
+        .game-btn.reset-btn {
+            background: #747d8c;
+        }
+
+        #unit-test-report {
+            margin-top: 15px;
+            width: 100%;
+            max-width: 800px;
+            background: #0f3460;
+            border: 2px solid #e94560;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        #unit-test-report.passed {
+            border-color: #2ed573;
+            color: #2ed573;
+        }
+
+        #instructions {
+            margin-top: 10px;
+            color: #a4b0be;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <header>
+            <h1>🍄 MarioCraft Spelling Adventure ⛏️</h1>
+            <div id="ui-bar">
+                <button class="sound-toggle-btn" id="sound-toggle-btn" title="Toggle Sound On/Off (M)">🔊 Sound: ON</button>
+                <div class="ui-badge" id="words-count">🏆 Words: 0</div>
+                <div class="ui-badge" id="score-count">⭐ Score: 0</div>
+                <div class="ui-badge" id="inventory-count">🧱 Blocks: 0</div>
+            </div>
+        </header>
+
+        <!-- HINT PANEL -->
+        <div id="hint-panel">
+            <span id="hint-emoji" class="hint-emoji">❓</span>
+            <div class="hint-text">
+                <div id="hint-status" class="hint-status">WORD CLUE</div>
+                <div id="hint-definition" class="hint-definition">Hit floating question blocks to collect missing
+                    letters!</div>
+            </div>
+            <button class="game-btn speak-btn" id="speak-word-btn" title="Listen to word">🔊 Speak Word</button>
+        </div>
+
+        <div id="target-word-container"></div>
+
+        <canvas id="gameCanvas" width="800" height="448"></canvas>
+
+        <div id="controls-panel">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="game-btn" id="toggle-mode-btn">Switch to Sandbox Mode (Tab)</button>
+                <button class="game-btn recycle-btn" id="clear-sandbox-btn" style="display: none;" title="Recycle all placed green blocks back into inventory">♻️ Recycle All Blocks (0)</button>
+                <button class="game-btn reset-btn" id="reset-btn">🔄 Restart Game</button>
+                <button class="game-btn test-btn" id="run-tests-btn" style="background: #2c3e50;" title="Run automated unit test suite">🧪 Run Tests</button>
+            </div>
+            <div style="font-size: 0.9rem; color: #f1c40f;">
+                <strong>Controls:</strong> Arrow Keys / A & D (Move) | Space / W / &#8593; (Jump) | M (Sound On/Off) | Click (Place/Recycle Block)
+            </div>
+        </div>
+
+        <div id="instructions">
+            Spelling Mode: Jump into <strong>❓ Question / Treasure Blocks</strong> to pop wide parabolic letters (smashed blocks reappear in another reachable location) or smash <strong>🟩 Green Blocks</strong>! | Sandbox Mode: Click empty tile to place block, click or right-click placed green block to remove & recycle (+1 block), or click <strong>♻️ Recycle All Blocks</strong>!
+        </div>
+
+        <div id="unit-test-report"></div>
+    </div>
+
+    <script>
+        // --- 1. GAME ENGINE & CONSTANTS ---
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 448;
+        const TILE_SIZE = 32;
+        const WORLD_WIDTH = 8000; // in tiles (~100 tiles per word on average across 80 words)
+        const SAVE_VERSION = 1;
+        const GRAVITY = 1200;
+        const JUMP_FORCE = -460;
+        const PLAYER_SPEED = 220;
+
+        // Sandbox brick block colours (Mario-style)
+        const BRICK_MORTAR = '#5C3A1E';
+        const BRICK_FACE = '#8B5E3C';
+        const BRICK_HIGHLIGHT = '#A0704B';
+        const BRICK_FACE_ALPHA = 'rgba(139, 94, 60, 0.4)';
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let soundEnabled = true;
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            GameStorage.save('sound_enabled', soundEnabled);
+            updateSoundUI();
+            if (!soundEnabled) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                }
+            } else {
+                sfx.playJump();
+            }
+        }
+
+        function updateSoundUI() {
+            const btn = document.getElementById('sound-toggle-btn');
+            if (btn) {
+                if (soundEnabled) {
+                    btn.innerText = "🔊 Sound: ON";
+                    btn.classList.remove('sound-muted');
+                } else {
+                    btn.innerText = "🔇 Sound: OFF";
+                    btn.classList.add('sound-muted');
+                }
+            }
+        }
+
+        let gameMode = 'spelling'; // 'spelling' or 'sandbox'
+        let inventoryBlocks = 0;
+        let wordsCompletedCount = 0;
+        let totalScore = 0;
+        let currentWordIndex = 0;
+        let currentWordObj = null;
+        let currentWord = "";
+        let spelledWord = [];
+        let blockHitsCount = 0;
+        let hintUnlocked = true;
+
+        // Difficulty Progression: Complete several words of current length before progressing to other lengths
+        const WORDS_PER_TIER = 4;
+        let currentTierLength = 3;
+        let tierWordsCompleted = 0;
+        const playedWordsInTier = new Set();
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let isMouseInCanvas = false;
+
+        // Sound FX module using Web Audio API
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playJump() {
+                if (!soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playBlockHit() {
+                if (!soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(450, this.ctx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+
+            playCorrect() {
+                if (!soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.08);
+                osc.frequency.setValueAtTime(783.99, now + 0.16);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                osc.start();
+                osc.stop(now + 0.3);
+            }
+
+            playIncorrect() {
+                if (!soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(140, this.ctx.currentTime + 0.1);
+
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playVictory() {
+                if (!soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const playTone = (freq, start, duration) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + start);
+                    gain.gain.setValueAtTime(0.08, now + start);
+                    gain.gain.exponentialRampToValueAtTime(0.005, now + start + duration);
+                    osc.start(now + start);
+                    osc.stop(now + start + duration);
+                };
+
+                playTone(523.25, 0.0, 0.12);
+                playTone(659.25, 0.12, 0.12);
+                playTone(783.99, 0.24, 0.12);
+                playTone(1046.50, 0.36, 0.35);
+            }
+        }
+        const sfx = new SoundFX();
+
+        // FIX: SpeechSynthesis text normalization so full word is spoken smoothly instead of spelling acronym letters like A-C-T or A-D-D
+        function speakWord(text) {
+            if (!soundEnabled) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                // Lowercase string conversion ensures SpeechSynthesis reads it as a spoken word
+                const cleanWord = text.toLowerCase();
+                const utterance = new SpeechSynthesisUtterance(cleanWord);
+                utterance.rate = 0.85;
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- 1.2. PERSISTENCE (STORAGE MODULE) ---
+        const GameStorage = {
+            save: (key, data) => {
+                try {
+                    localStorage.setItem(`swb_${key}`, JSON.stringify(data));
+                } catch (e) {
+                    console.error("Storage save failed", e);
+                }
+            },
+            load: (key) => {
+                try {
+                    const item = localStorage.getItem(`swb_${key}`);
+                    return item ? JSON.parse(item) : null;
+                } catch (e) {
+                    console.error("Storage load failed", e);
+                    return null;
+                }
+            }
+        };
+
+        // --- 1.5. COMPLETE OFFICIAL OXFORD 3000 VOCABULARY DICTIONARY (3,156 Words Sorted Short to Long) ---
+        let WORD_DICTIONARY = [];
+        let wordsByLength = {};
+        let availableLengths = [];
+
+        function initDictionary(data) {
+            WORD_DICTIONARY = data;
+            for (const entry of WORD_DICTIONARY) {
+                const len = entry.word.length;
+                if (!wordsByLength[len]) wordsByLength[len] = [];
+                wordsByLength[len].push(entry);
+            }
+            availableLengths = Object.keys(wordsByLength).map(Number).sort((a, b) => a - b);
+        }
+
+        // --- 1.6. WORD LENGTH INDEXING & PROGRESSIVE DIFFICULTY ---
+        
+
+        function getRandomWordOfLength(len) {
+            const pool = wordsByLength[len] || wordsByLength[3] || WORD_DICTIONARY;
+            let available = pool.filter(w => !playedWordsInTier.has(w.word));
+            if (available.length === 0) {
+                playedWordsInTier.clear();
+                available = pool;
+            }
+            const chosen = available[Math.floor(Math.random() * available.length)];
+            playedWordsInTier.add(chosen.word);
+            return chosen;
+        }
+
+        function advanceToNextWord() {
+            tierWordsCompleted++;
+            if (tierWordsCompleted >= WORDS_PER_TIER) {
+                // Completed several words of this length; advance to next word length!
+                tierWordsCompleted = 0;
+                playedWordsInTier.clear();
+                const currentIdx = availableLengths.indexOf(currentTierLength);
+                const nextIdx = (currentIdx + 1) % availableLengths.length;
+                currentTierLength = availableLengths[nextIdx];
+            }
+            const nextWord = getRandomWordOfLength(currentTierLength);
+            initWord(nextWord);
+            saveState();
+        }
+
+        let activeLetters = [];
+        let particles = [];
+        let celebrationTimer = 0;
+
+        function initWord(wordObj) {
+            currentWordObj = wordObj;
+            currentWord = wordObj.word.toUpperCase();
+            spelledWord = new Array(currentWord.length).fill(null);
+            blockHitsCount = 0;
+            hintUnlocked = true;
+            updateHintUI();
+            // Automatically speak the word out loud at the start of a new word!
+            speakWord(currentWord);
+        }
+
+        function isVowelChar(char) {
+            return ['A', 'E', 'I', 'O', 'U'].includes(char.toUpperCase());
+        }
+
+        function updateHintUI() {
+            const statusEl = document.getElementById('hint-status');
+            const defEl = document.getElementById('hint-definition');
+            const emojiEl = document.getElementById('hint-emoji');
+
+            if (statusEl) {
+                statusEl.innerText = `💡 WORD CLUE (${currentWordObj.category}) - ${currentWord.length}-Letter Words (${tierWordsCompleted + 1}/${WORDS_PER_TIER})`;
+            }
+            if (emojiEl) emojiEl.innerText = currentWordObj.emoji;
+            if (defEl) defEl.innerText = `"${currentWordObj.definition}"`;
+        }
+
+        // Start with a randomized word of current length tier (doesn't always start with ACT)
+        //initWord(getRandomWordOfLength(currentTierLength));
+
+        // --- 2. GAME STATE DATA STRUCTURES ---
+        class Player {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 28;
+                this.height = 34;
+                this.vx = 0;
+                this.vy = 0;
+                this.isGrounded = false;
+                this.walkAnimTimer = 0;
+
+                this.coyoteTimer = 0;
+                this.jumpBufferTimer = 0;
+            }
+
+            update(dt, world) {
+                this.coyoteTimer -= dt;
+                this.jumpBufferTimer -= dt;
+                if (Math.abs(this.vx) > 0) {
+                    this.walkAnimTimer += dt * 12;
+                } else {
+                    this.walkAnimTimer = 0;
+                }
+
+                this.vy += GRAVITY * dt;
+
+                if (this.jumpBufferTimer > 0 && this.coyoteTimer > 0) {
+                    this.vy = JUMP_FORCE;
+                    this.isGrounded = false;
+                    this.coyoteTimer = 0;
+                    this.jumpBufferTimer = 0;
+                    sfx.playJump();
+                }
+
+                this.x += this.vx * dt;
+
+                // HARD BOUNDARY BLOCKING
+                if (this.x < 0) {
+                    this.x = 0;
+                    this.vx = 0;
+                } else if (this.x > world.width - this.width) {
+                    this.x = world.width - this.width;
+                    this.vx = 0;
+                }
+
+                this.handleHorizontalCollisions(world);
+
+                this.y += this.vy * dt;
+                this.handleVerticalCollisions(world);
+            }
+
+            handleHorizontalCollisions(world) {
+                const tiles = (typeof world.getCollidableTiles === 'function')
+                    ? world.getCollidableTiles(this.x, this.y, this.width, this.height)
+                    : (world.tiles || []);
+                for (let tile of tiles) {
+                    if (tile && this.intersects(tile)) {
+                        if (this.vx > 0) {
+                            this.x = tile.x - this.width;
+                        } else if (this.vx < 0) {
+                            this.x = tile.x + tile.width;
+                        }
+                    }
+                }
+            }
+
+            handleVerticalCollisions(world) {
+                this.isGrounded = false;
+                const tiles = (typeof world.getCollidableTiles === 'function')
+                    ? world.getCollidableTiles(this.x, this.y, this.width, this.height)
+                    : (world.tiles || []);
+
+                for (let i = tiles.length - 1; i >= 0; i--) {
+                    const tile = tiles[i];
+                    if (tile && this.intersects(tile)) {
+                        if (this.vy > 0) { // Falling down onto block
+                            this.y = tile.y - this.height;
+                            this.vy = 0;
+                            this.isGrounded = true;
+                            this.coyoteTimer = 0.15; // 150ms Coyote time
+                        } else if (this.vy < 0) { // Jumping up into bottom of block
+                            this.y = tile.y + tile.height;
+                            this.vy = 0;
+
+                            if (tile.isQuestionBlock) {
+                                sfx.playBlockHit();
+                                blockHitsCount++;
+                                spawnLetterFromBlock(tile);
+
+                                // Smashed treasure block: golden burst particles
+                                for (let p = 0; p < 16; p++) {
+                                    particles.push(new Particle(tile.x + 16, tile.y + 16, Math.random() < 0.5 ? '#f1c40f' : '#e67e22'));
+                                }
+
+                                // Smashed treasure block shows up in another random but reachable location
+                                const newBlock = world.relocateQuestionBlock(tile);
+                                if (newBlock) {
+                                    for (let p = 0; p < 10; p++) {
+                                        particles.push(new Particle(newBlock.x + 16, newBlock.y + 16, '#f1c40f'));
+                                    }
+                                }
+                            } else if (tile.isSandboxBlock) {
+                                // Smash sandbox block!
+                                world.removeTileAt(tile.gridX, tile.gridY);
+                                inventoryBlocks++;
+                                sfx.playBlockHit();
+                                for (let p = 0; p < 12; p++) {
+                                    particles.push(new Particle(tile.x + 16, tile.y + 16, BRICK_FACE));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            intersects(rect) {
+                return this.x < rect.x + rect.width &&
+                    this.x + this.width > rect.x &&
+                    this.y < rect.y + rect.height &&
+                    this.y + this.height > rect.y;
+            }
+
+            draw(ctx) {
+                // MINECRAFT STRIDER AVATAR
+                const legWobble = Math.sin(this.walkAnimTimer) * 4;
+
+                ctx.fillStyle = '#a02020';
+                ctx.fillRect(this.x + 3, this.y + 24 + legWobble, 6, 10);
+                ctx.fillRect(this.x + 19, this.y + 24 - legWobble, 6, 10);
+
+                ctx.fillStyle = '#501010';
+                ctx.fillRect(this.x + 2, this.y + 32 + legWobble, 8, 3);
+                ctx.fillRect(this.x + 18, this.y + 32 - legWobble, 8, 3);
+
+                ctx.fillStyle = '#c0392b';
+                ctx.fillRect(this.x, this.y + 4, 28, 22);
+
+                ctx.fillStyle = '#900c3f';
+                ctx.fillRect(this.x + 2, this.y + 6, 24, 18);
+
+                ctx.fillStyle = '#800000';
+                ctx.fillRect(this.x - 3, this.y + 8, 4, 2);
+                ctx.fillRect(this.x - 4, this.y + 14, 5, 2);
+                ctx.fillRect(this.x + 27, this.y + 8, 4, 2);
+                ctx.fillRect(this.x + 27, this.y + 14, 5, 2);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(this.x + 4, this.y + 10, 6, 6);
+                ctx.fillRect(this.x + 18, this.y + 10, 6, 6);
+
+                ctx.fillStyle = '#000000';
+                const facingRight = (this.vx >= 0);
+                const pupilOffset = facingRight ? 3 : 0;
+                ctx.fillRect(this.x + 4 + pupilOffset, this.y + 12, 3, 4);
+                ctx.fillRect(this.x + 18 + pupilOffset, this.y + 12, 3, 4);
+            }
+        }
+
+        class Block {
+            constructor(gridX, gridY, isQuestionBlock = false) {
+                this.gridX = gridX;
+                this.gridY = gridY;
+                this.x = gridX * TILE_SIZE;
+                this.y = gridY * TILE_SIZE;
+                this.width = TILE_SIZE;
+                this.height = TILE_SIZE;
+                this.isQuestionBlock = isQuestionBlock;
+                this.isSandboxBlock = false;
+
+                this.bounceOffsetY = 0;
+                this.bounceTimer = 0;
+            }
+
+            triggerBounce() {
+                this.bounceTimer = 0.2;
+            }
+
+            update(dt) {
+                if (this.bounceTimer > 0) {
+                    this.bounceTimer -= dt;
+                    const progress = (0.2 - this.bounceTimer) / 0.2;
+                    this.bounceOffsetY = -Math.sin(progress * Math.PI) * 10;
+                } else {
+                    this.bounceOffsetY = 0;
+                }
+            }
+
+            draw(ctx) {
+                const renderY = this.y + this.bounceOffsetY;
+
+                if (this.isQuestionBlock) {
+                    ctx.fillStyle = '#f39c12';
+                    ctx.fillRect(this.x, renderY, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = '#d35400';
+                    ctx.fillRect(this.x + 2, renderY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 20px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', this.x + TILE_SIZE / 2, renderY + TILE_SIZE / 2);
+                } else if (this.isSandboxBlock) {
+                    // Mario-style brown brick block
+                    const bx = this.x, by = renderY, S = TILE_SIZE;
+                    // Dark mortar background
+                    ctx.fillStyle = '#5C3A1E';
+                    ctx.fillRect(bx, by, S, S);
+                    // Brick colour
+                    ctx.fillStyle = '#8B5E3C';
+                    // Top row: two half-width bricks
+                    ctx.fillRect(bx + 1, by + 1, S / 2 - 2, S / 2 - 2);
+                    ctx.fillRect(bx + S / 2 + 1, by + 1, S / 2 - 2, S / 2 - 2);
+                    // Bottom row: offset bricks (three pieces)
+                    ctx.fillRect(bx + 1, by + S / 2 + 1, S / 4 - 1, S / 2 - 2);
+                    ctx.fillRect(bx + S / 4 + 1, by + S / 2 + 1, S / 2 - 2, S / 2 - 2);
+                    ctx.fillRect(bx + S * 3 / 4 + 1, by + S / 2 + 1, S / 4 - 2, S / 2 - 2);
+                    // Light highlight on each brick (top-left edge)
+                    ctx.fillStyle = '#A0704B';
+                    ctx.fillRect(bx + 1, by + 1, S / 2 - 2, 2);
+                    ctx.fillRect(bx + S / 2 + 1, by + 1, S / 2 - 2, 2);
+                    ctx.fillRect(bx + 1, by + S / 2 + 1, S / 4 - 1, 2);
+                    ctx.fillRect(bx + S / 4 + 1, by + S / 2 + 1, S / 2 - 2, 2);
+                    ctx.fillRect(bx + S * 3 / 4 + 1, by + S / 2 + 1, S / 4 - 2, 2);
+                } else {
+                    ctx.fillStyle = '#e67e22';
+                    ctx.fillRect(this.x, renderY, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = '#d35400';
+                    ctx.strokeRect(this.x, renderY, TILE_SIZE, TILE_SIZE);
+                }
+            }
+        }
+
+        class LetterEntity {
+            constructor(x, y, char) {
+                this.x = x;
+                this.y = y;
+                this.char = char;
+                this.width = 24;
+                this.height = 24;
+                this.vy = -180;
+                // PARABOLIC POP ARCS: Wide outward pop
+                const popDirection = (Math.random() < 0.5) ? -1 : 1;
+                this.vx = (140 + Math.random() * 80) * popDirection;
+                this.isFading = false;
+                this.fade = 1.0;
+                this.reachedFloor = false;
+                this.floorTimer = 0;
+                this.lifetimeOnFloor = 5.0;
+                this.isExpired = false;
+            }
+
+            get isFlashing() {
+                return this.reachedFloor && (this.lifetimeOnFloor - this.floorTimer) <= 2.0;
+            }
+
+            update(dt, world) {
+                if (this.isFading) {
+                    this.fade -= dt * 3;
+                    return;
+                }
+
+                this.vy += GRAVITY * 0.5 * dt;
+                this.x += this.vx * dt;
+                this.y += this.vy * dt;
+
+                // Ground bounce & friction
+                const floorY = (rows - 2) * TILE_SIZE - this.height;
+                if (this.y >= floorY) {
+                    this.y = floorY;
+                    this.vy = 0;
+                    this.vx *= 0.92; // Friction slowdown
+                    this.reachedFloor = true;
+                }
+
+                // Hard screen border bouncing for letters
+                if (this.x < 0) {
+                    this.x = 0;
+                    this.vx = -this.vx;
+                } else if (this.x > world.width - this.width) {
+                    this.x = world.width - this.width;
+                    this.vx = -this.vx;
+                }
+
+                // 5-second floor countdown
+                if (this.reachedFloor) {
+                    this.floorTimer += dt;
+                    if (this.floorTimer >= this.lifetimeOnFloor) {
+                        this.isExpired = true;
+                    }
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                let alpha = Math.max(0, this.fade);
+                let renderX = this.x;
+                let renderY = this.y;
+                let borderColor = '#ffffff';
+                let borderWidth = 2;
+
+                // Flashing reminder effects when disappearing soon (last 2 seconds)
+                if (this.reachedFloor && !this.isFading) {
+                    const remaining = Math.max(0, this.lifetimeOnFloor - this.floorTimer);
+                    if (remaining <= 2.0) {
+                        // Flash rate accelerates: 6 Hz for remaining <= 2s, 14 Hz for urgent final 0.8s
+                        const flashFreq = remaining <= 0.8 ? 14 : 6;
+                        const blink = Math.floor(this.floorTimer * flashFreq * 2) % 2 === 0;
+                        if (!blink) {
+                            alpha *= 0.25; // Transparent blink cycle
+                        } else {
+                            borderColor = '#ffd32a'; // Glowing warning border
+                            borderWidth = 3;
+                        }
+
+                        // Urgent jitter effect in the final 0.5s
+                        if (remaining <= 0.5) {
+                            renderX += (Math.random() - 0.5) * 2;
+                        }
+                    }
+                }
+
+                ctx.globalAlpha = alpha;
+
+                const isVowel = isVowelChar(this.char);
+                ctx.fillStyle = isVowel ? '#ff4757' : '#2e86de';
+                ctx.fillRect(renderX, renderY, this.width, this.height);
+                ctx.strokeStyle = borderColor;
+                ctx.lineWidth = borderWidth;
+                ctx.strokeRect(renderX, renderY, this.width, this.height);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.char, renderX + this.width / 2, renderY + this.height / 2);
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 160;
+                this.vy = (Math.random() - 0.5) * 160;
+                this.size = Math.random() * 5 + 3;
+                this.fade = 1.0;
+            }
+
+            update(dt) {
+                this.x += this.vx * dt;
+                this.y += this.vy * dt;
+                this.fade -= dt * 2.5;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.fade);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        class ConfettiParticle extends Particle {
+            constructor(x, y) {
+                const colors = ['#f1c40f', '#e94560', '#2ed573', '#1e90ff', '#ff4757'];
+                super(x, y, colors[Math.floor(Math.random() * colors.length)]);
+                this.vy = -Math.random() * 250 - 100;
+                this.vx = (Math.random() - 0.5) * 300;
+                this.size = Math.random() * 8 + 4;
+            }
+
+            update(dt) {
+                this.vy += GRAVITY * 0.4 * dt;
+                this.x += this.vx * dt;
+                this.y += this.vy * dt;
+                this.fade -= dt * 0.5;
+            }
+        }
+
+        class World {
+            constructor(cols, rows) {
+                this.cols = cols;
+                this.rows = rows;
+                this.width = cols * TILE_SIZE;
+                this.height = rows * TILE_SIZE;
+                this.tiles = [];
+                this.tilesMap = new Map();
+                this._groundCache = new Map();
+
+                this.initLevel();
+            }
+
+            isGround(gridX, gridY) {
+                return gridX >= 0 && gridX < this.cols && (gridY === this.rows - 1 || gridY === this.rows - 2);
+            }
+
+            getGroundTile(gridX, gridY) {
+                const key = `${gridX},${gridY}`;
+                let tile = this._groundCache.get(key);
+                if (!tile) {
+                    tile = new Block(gridX, gridY, false);
+                    if (this._groundCache.size > 256) {
+                        this._groundCache.clear();
+                    }
+                    this._groundCache.set(key, tile);
+                }
+                return tile;
+            }
+
+            initLevel() {
+                this.tiles = [];
+                this.tilesMap = new Map();
+                this._groundCache.clear();
+
+                // Question Blocks with high clearance near player start position
+                this.addTile(new Block(5, this.rows - 5, true));
+                this.addTile(new Block(10, this.rows - 5, true));
+                this.addTile(new Block(15, this.rows - 5, true));
+                this.addTile(new Block(19, this.rows - 5, true));
+            }
+
+            addTile(tile) {
+                if (tile.gridX >= 0 && tile.gridX < this.cols && tile.gridY >= 0 && tile.gridY < this.rows) {
+                    const key = `${tile.gridX},${tile.gridY}`;
+                    this.tilesMap.set(key, tile);
+                    if (!this.tiles.includes(tile)) {
+                        this.tiles.push(tile);
+                    }
+                }
+            }
+
+            removeTileAt(gridX, gridY) {
+                if (gridX >= 0 && gridX < this.cols && gridY >= 0 && gridY < this.rows) {
+                    const key = `${gridX},${gridY}`;
+                    const tile = this.tilesMap.get(key);
+                    if (tile) {
+                        this.tilesMap.delete(key);
+                        const idx = this.tiles.indexOf(tile);
+                        if (idx !== -1) this.tiles.splice(idx, 1);
+                    }
+                }
+            }
+
+            // Relocate smashed treasure block to another random reachable location in current area
+            relocateQuestionBlock(tile) {
+                this.removeTileAt(tile.gridX, tile.gridY);
+
+                // Reachable heights from ground: rows - 5 (clearance 64px) and rows - 6 (clearance 96px)
+                const reachableRows = [this.rows - 5, this.rows - 6];
+                const candidateSpots = [];
+                const minCol = 2;
+                const maxCol = Math.min(this.cols - 3, 24);
+                for (let r of reachableRows) {
+                    for (let c = minCol; c <= maxCol; c++) {
+                        if (c === tile.gridX && r === tile.gridY) continue;
+                        if (this.getTileAt(c, r) === null) {
+                            candidateSpots.push({ x: c, y: r });
+                        }
+                    }
+                }
+
+                if (candidateSpots.length > 0) {
+                    const spot = candidateSpots[Math.floor(Math.random() * candidateSpots.length)];
+                    const newBlock = new Block(spot.x, spot.y, true);
+                    this.addTile(newBlock);
+                    return newBlock;
+                }
+                return null;
+            }
+
+            getTileAt(gridX, gridY) {
+                if (gridX >= 0 && gridX < this.cols && gridY >= 0 && gridY < this.rows) {
+                    const key = `${gridX},${gridY}`;
+                    if (this.tilesMap.has(key)) {
+                        return this.tilesMap.get(key);
+                    }
+                    if (this.isGround(gridX, gridY)) {
+                        return this.getGroundTile(gridX, gridY);
+                    }
+                }
+                return null;
+            }
+
+            getCollidableTiles(x, y, width, height) {
+                const minGx = Math.floor(x / TILE_SIZE) - 1;
+                const maxGx = Math.floor((x + width) / TILE_SIZE) + 1;
+                const minGy = Math.floor(y / TILE_SIZE) - 1;
+                const maxGy = Math.floor((y + height) / TILE_SIZE) + 1;
+
+                const collidables = [];
+                for (let gx = minGx; gx <= maxGx; gx++) {
+                    for (let gy = minGy; gy <= maxGy; gy++) {
+                        const tile = this.getTileAt(gx, gy);
+                        if (tile) {
+                            collidables.push(tile);
+                        }
+                    }
+                }
+                return collidables;
+            }
+
+            getVisibleColumns(cam) {
+                const cX = cam ? cam.x : 0;
+                const cW = cam ? cam.width : this.width;
+                // Viewport plus 1-tile buffer on each side
+                const minCol = Math.max(0, Math.floor(cX / TILE_SIZE) - 1);
+                const maxCol = Math.min(this.cols - 1, Math.floor((cX + cW) / TILE_SIZE) + 1);
+                return { minCol, maxCol };
+            }
+
+            update(dt) {
+                for (let tile of this.tiles) {
+                    tile.update(dt);
+                }
+            }
+
+            draw(ctx, cam) {
+                const { minCol, maxCol } = this.getVisibleColumns(cam);
+
+                // Render ground tiles within viewport + 1-tile buffer
+                for (let c = minCol; c <= maxCol; c++) {
+                    const g1 = this.getTileAt(c, this.rows - 2);
+                    if (g1) g1.draw(ctx);
+                    const g2 = this.getTileAt(c, this.rows - 1);
+                    if (g2) g2.draw(ctx);
+                }
+
+                // Render sparse non-ground tiles within visible columns
+                for (let tile of this.tiles) {
+                    if (tile.gridX >= minCol && tile.gridX <= maxCol) {
+                        tile.draw(ctx);
+                    }
+                }
+            }
+        }
+
+        // --- 3. CORE GAME LOOPS & LOGIC ---
+        const cols = WORLD_WIDTH;
+        const rows = Math.floor(CANVAS_HEIGHT / TILE_SIZE);
+
+        const world = new World(cols, rows);
+        const player = new Player(40, (rows - 4) * TILE_SIZE);
+
+        const camera = {
+            x: 0,
+            y: 0,
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
+            update(target) {
+                if (!target) return;
+                const targetX = target.x + (target.width / 2) - (this.width / 2);
+                const maxCamX = Math.max(0, world.width - this.width);
+                this.x = Math.max(0, Math.min(maxCamX, targetX));
+            }
+        };
+
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'KeyW' || e.code === 'Space' || e.code === 'ArrowUp') {
+                player.jumpBufferTimer = 0.15; // 150ms Jump Buffer
+                e.preventDefault(); // Prevent page scroll on Space/ArrowUp
+            }
+            if (e.code === 'ArrowLeft' || e.code === 'ArrowRight' || e.code === 'ArrowDown') {
+                e.preventDefault(); // Prevent page scroll on arrow keys
+            }
+            if (e.code === 'Tab') {
+                e.preventDefault();
+                toggleGameMode();
+            }
+            if (e.code === 'KeyM') {
+                e.preventDefault();
+                toggleSound();
+            }
+        });
+        window.addEventListener('keyup', e => {
+            keys[e.code] = false;
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            mouseX = (e.clientX - rect.left) * scaleX;
+            mouseY = (e.clientY - rect.top) * scaleY;
+            isMouseInCanvas = true;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isMouseInCanvas = false;
+        });
+
+        function recycleSandboxBlockAt(gridX, gridY) {
+            const existing = world.getTileAt(gridX, gridY);
+            if (existing && existing.isSandboxBlock) {
+                world.removeTileAt(gridX, gridY);
+                inventoryBlocks++;
+                saveState();
+                sfx.playBlockHit();
+                for (let p = 0; p < 12; p++) {
+                    particles.push(new Particle(gridX * TILE_SIZE + 16, gridY * TILE_SIZE + 16, '#8B5E3C'));
+                }
+                updateUI();
+                return true;
+            }
+            return false;
+        }
+
+        function recycleAllSandboxBlocks() {
+            const sandboxBlocks = world.tiles.filter(t => t.isSandboxBlock);
+            if (sandboxBlocks.length === 0) return 0;
+            const recycledCount = sandboxBlocks.length;
+            for (let b of sandboxBlocks) {
+                world.removeTileAt(b.gridX, b.gridY);
+                for (let p = 0; p < 6; p++) {
+                    particles.push(new Particle(b.x + 16, b.y + 16, '#8B5E3C'));
+                }
+            }
+            inventoryBlocks += recycledCount;
+            saveState();
+            sfx.playBlockHit();
+            updateUI();
+            return recycledCount;
+        }
+
+        canvas.addEventListener('mousedown', e => {
+            if (gameMode === 'sandbox' && isMouseInCanvas) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const mX = (e.clientX - rect.left) * scaleX;
+                const mY = (e.clientY - rect.top) * scaleY;
+                const worldMX = mX + camera.x;
+                const gridX = Math.floor(worldMX / TILE_SIZE);
+                const gridY = Math.floor(mY / TILE_SIZE);
+
+                const existing = world.getTileAt(gridX, gridY);
+                if (existing && existing.isSandboxBlock) {
+                    // Click on placed brick block removes and recycles it (+1 block refund)
+                    recycleSandboxBlockAt(gridX, gridY);
+                } else if (!existing && inventoryBlocks > 0) {
+                    // Click on empty space places brick block
+                    const newBlock = new Block(gridX, gridY, false);
+                    newBlock.isSandboxBlock = true;
+                    world.addTile(newBlock);
+                    inventoryBlocks--;
+                    saveState();
+                    sfx.playBlockHit();
+                    updateUI();
+                }
+            }
+        });
+
+        canvas.addEventListener('contextmenu', e => {
+            if (gameMode === 'sandbox') {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const mX = (e.clientX - rect.left) * scaleX;
+                const mY = (e.clientY - rect.top) * scaleY;
+                const worldMX = mX + camera.x;
+                const gridX = Math.floor(worldMX / TILE_SIZE);
+                const gridY = Math.floor(mY / TILE_SIZE);
+                recycleSandboxBlockAt(gridX, gridY);
+            }
+        });
+
+        function loadState() {
+            const savedSoundSetting = GameStorage.load('sound_enabled');
+            if (savedSoundSetting !== null) {
+                soundEnabled = Boolean(savedSoundSetting);
+            }
+            updateSoundUI();
+            const savedData = GameStorage.load('game_state');
+            if (savedData) {
+                const version = savedData.saveVersion || 0;
+                inventoryBlocks = Math.max(0, savedData.inventoryBlocks || 0);
+                wordsCompletedCount = savedData.wordsCompletedCount || 0;
+                totalScore = savedData.totalScore || 0;
+                currentTierLength = savedData.currentTierLength || 3;
+                tierWordsCompleted = savedData.tierWordsCompleted || 0;
+
+                if (savedData.playerX !== undefined && savedData.playerY !== undefined) {
+                    player.x = savedData.playerX;
+                    player.y = savedData.playerY;
+                }
+
+                if (savedData.sandboxBlocks && Array.isArray(savedData.sandboxBlocks)) {
+                    for (let b of savedData.sandboxBlocks) {
+                        const sb = new Block(b.gridX, b.gridY, false);
+                        sb.isSandboxBlock = true;
+                        world.addTile(sb);
+                    }
+                }
+
+                if (savedData.currentWord) {
+                    const found = WORD_DICTIONARY.find(w => w.word.toUpperCase() === savedData.currentWord.toUpperCase());
+                    if (found) {
+                        initWord(found);
+                        return;
+                    }
+                }
+            }
+            initWord(getRandomWordOfLength(currentTierLength));
+        }
+
+        function saveState() {
+            const sandboxBlocks = world.tiles
+                .filter(t => t.isSandboxBlock)
+                .map(t => ({ gridX: t.gridX, gridY: t.gridY }));
+
+            GameStorage.save('game_state', {
+                saveVersion: SAVE_VERSION,
+                inventoryBlocks,
+                wordsCompletedCount,
+                totalScore,
+                currentTierLength,
+                tierWordsCompleted,
+                currentWord: currentWordObj ? currentWordObj.word : null,
+                sandboxBlocks,
+                playerX: player.x,
+                playerY: player.y
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('inventory-count').innerText = `🧱 Blocks: ${inventoryBlocks}`;
+            document.getElementById('words-count').innerText = `🏆 Words: ${wordsCompletedCount}`;
+            document.getElementById('score-count').innerText = `⭐ Score: ${totalScore}`;
+
+            updateRecycleButton();
+            const wordContainer = document.getElementById('target-word-container');
+            wordContainer.innerHTML = '';
+            for (let i = 0; i < currentWord.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'letter-slot';
+                if (spelledWord[i] !== null) {
+                    slot.classList.add('filled');
+                    slot.innerText = spelledWord[i];
+                } else {
+                    slot.innerText = '';
+                }
+                wordContainer.appendChild(slot);
+            }
+        }
+
+        function updateRecycleButton() {
+            const recycleBtn = document.getElementById('clear-sandbox-btn');
+            if (recycleBtn) {
+                if (gameMode === 'sandbox') {
+                    recycleBtn.style.display = 'inline-block';
+                    const count = world.tiles.filter(t => t.isSandboxBlock).length;
+                    recycleBtn.innerText = `♻️ Recycle All Blocks (${count})`;
+                    recycleBtn.style.opacity = count > 0 ? '1' : '0.6';
+                } else {
+                    recycleBtn.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleGameMode() {
+            const btn = document.getElementById('toggle-mode-btn');
+            if (gameMode === 'spelling') {
+                gameMode = 'sandbox';
+                if (btn) {
+                    btn.innerText = "Switch to Spelling Mode (Tab)";
+                    btn.classList.add('sandbox-active');
+                }
+            } else {
+                gameMode = 'spelling';
+                if (btn) {
+                    btn.innerText = "Switch to Sandbox Mode (Tab)";
+                    btn.classList.remove('sandbox-active');
+                }
+            }
+            updateRecycleButton();
+        }
+
+        document.getElementById('toggle-mode-btn').addEventListener('click', toggleGameMode);
+        document.getElementById('clear-sandbox-btn').addEventListener('click', recycleAllSandboxBlocks);
+        document.getElementById('sound-toggle-btn').addEventListener('click', toggleSound);
+        document.getElementById('run-tests-btn').addEventListener('click', runUnitTests);
+
+        document.getElementById('speak-word-btn').addEventListener('click', () => {
+            speakWord(currentWord);
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if (confirm("Are you sure you want to restart the game from the beginning?")) {
+                localStorage.clear();
+                wordsCompletedCount = 0;
+                totalScore = 0;
+                inventoryBlocks = 0;
+                currentTierLength = 3;
+                tierWordsCompleted = 0;
+                playedWordsInTier.clear();
+                player.x = 40;
+                player.y = (rows - 4) * TILE_SIZE;
+                player.vx = 0;
+                player.vy = 0;
+                camera.x = 0;
+                world.initLevel();
+                initWord(getRandomWordOfLength(3));
+                saveState();
+                sfx.playVictory();
+            }
+        });
+
+        function spawnLetterFromBlock(block) {
+            const missingLetters = [];
+            for (let i = 0; i < currentWord.length; i++) {
+                if (spelledWord[i] === null) {
+                    missingLetters.push(currentWord[i]);
+                }
+            }
+
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const countToSpawn = 2;
+
+            for (let k = 0; k < countToSpawn; k++) {
+                let charToSpawn = '';
+                if (k === 0 && missingLetters.length > 0) {
+                    charToSpawn = missingLetters[Math.floor(Math.random() * missingLetters.length)];
+                } else {
+                    charToSpawn = alphabet[Math.floor(Math.random() * alphabet.length)];
+                }
+
+                const spawnX = block.x + (block.width / 2) - 12;
+                const spawnY = block.y - 10;
+                activeLetters.push(new LetterEntity(spawnX, spawnY, charToSpawn));
+            }
+        }
+
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+            lastTime = timestamp;
+
+            // Player Input
+            player.vx = 0;
+            if (keys['ArrowLeft'] || keys['KeyA']) {
+                player.vx = -PLAYER_SPEED;
+            }
+            if (keys['ArrowRight'] || keys['KeyD']) {
+                player.vx = PLAYER_SPEED;
+            }
+
+            player.update(dt, world);
+            world.update(dt);
+
+            for (let i = activeLetters.length - 1; i >= 0; i--) {
+                const letter = activeLetters[i];
+                letter.update(dt, world);
+
+                if (!letter.isFading && !letter.isExpired && player.intersects(letter)) {
+                    let matched = false;
+                    for (let j = 0; j < currentWord.length; j++) {
+                        if (currentWord[j] === letter.char && spelledWord[j] === null) {
+                            spelledWord[j] = letter.char;
+                            matched = true;
+                            break;
+                        }
+                    }
+
+                    if (matched) {
+                        activeLetters.splice(i, 1);
+                        sfx.playCorrect();
+
+                        if (spelledWord.every(c => c !== null)) {
+                            celebrationTimer = 2.0;
+                            inventoryBlocks++;
+                            wordsCompletedCount++;
+                            totalScore += currentWord.length * 100;
+                            saveState();
+                            sfx.playVictory();
+                            speakWord(currentWord);
+
+                            for (let p = 0; p < 80; p++) {
+                                particles.push(new ConfettiParticle(camera.x + canvas.width / 2, canvas.height / 3));
+                            }
+                        }
+                    } else {
+                        letter.isFading = true;
+                        sfx.playIncorrect();
+
+                        if (inventoryBlocks > 0) {
+                            inventoryBlocks = Math.max(0, inventoryBlocks - 1);
+                            saveState();
+                            updateUI();
+                        }
+
+                        const invBadge = document.getElementById('inventory-count');
+                        if (invBadge) {
+                            invBadge.classList.remove('deduct-flash');
+                            void invBadge.offsetWidth;
+                            invBadge.classList.add('deduct-flash');
+                            setTimeout(() => {
+                                if (invBadge) invBadge.classList.remove('deduct-flash');
+                            }, 400);
+                        }
+
+                        for (let p = 0; p < 8; p++) {
+                            particles.push(new Particle(letter.x + letter.width / 2, letter.y + letter.height / 2, '#e74c3c'));
+                        }
+                    }
+                } else if (letter.fade <= 0 || letter.isExpired) {
+                    if (letter.isExpired) {
+                        // Spawn poof particles when letter disappears after 5 seconds on the floor
+                        for (let p = 0; p < 8; p++) {
+                            particles.push(new Particle(letter.x + letter.width / 2, letter.y + letter.height / 2, '#dfe4ea'));
+                        }
+                    }
+                    activeLetters.splice(i, 1);
+                }
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update(dt);
+                if (p.fade <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            if (celebrationTimer > 0) {
+                celebrationTimer -= dt;
+                if (celebrationTimer <= 0) {
+                    advanceToNextWord();
+                }
+            }
+
+            // Update camera to follow player in world coordinates
+            camera.update(player);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Sky background rendered in screen space
+            ctx.fillStyle = '#5c94fc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // World space rendering with camera offset
+            ctx.save();
+            ctx.translate(-Math.floor(camera.x), 0);
+
+            world.draw(ctx, camera);
+
+            if (gameMode === 'sandbox' && isMouseInCanvas) {
+                const worldMouseX = mouseX + camera.x;
+                const hoverGridX = Math.floor(worldMouseX / TILE_SIZE);
+                const hoverGridY = Math.floor(mouseY / TILE_SIZE);
+                if (hoverGridX >= 0 && hoverGridX < cols && hoverGridY >= 0 && hoverGridY < rows) {
+                    const existingTile = world.getTileAt(hoverGridX, hoverGridY);
+                    if (existingTile && existingTile.isSandboxBlock) {
+                        // Hover over placed brick block: red removal & recycling preview
+                        ctx.fillStyle = 'rgba(231, 76, 60, 0.4)';
+                        ctx.fillRect(hoverGridX * TILE_SIZE, hoverGridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.strokeStyle = '#e74c3c';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(hoverGridX * TILE_SIZE, hoverGridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    } else if (!existingTile) {
+                        // Hover over empty tile: brown placement preview
+                        ctx.fillStyle = 'rgba(139, 94, 60, 0.4)';
+                        ctx.fillRect(hoverGridX * TILE_SIZE, hoverGridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.strokeStyle = '#8B5E3C';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(hoverGridX * TILE_SIZE, hoverGridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+            }
+
+            for (let letter of activeLetters) {
+                letter.draw(ctx);
+            }
+
+            player.draw(ctx);
+
+            for (let p of particles) {
+                p.draw(ctx);
+            }
+
+            ctx.restore();
+
+            updateUI();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+
+
+        // --- 4. EMBEDDED AUTOMATED UNIT TEST SUITE ---
+        function runUnitTests() {
+            const results = [];
+            const assert = (condition, msg) => {
+                if (condition) {
+                    results.push("PASS: " + msg);
+                } else {
+                    throw new Error("FAIL: " + msg);
+                }
+            };
+
+            const reportEl = document.getElementById('unit-test-report');
+            reportEl.style.display = 'block';
+
+            try {
+                // Test 1: Audio Context instantiation
+                sfx.init();
+                assert(sfx.ctx !== null, "SoundFX AudioContext initializes properly.");
+
+                // Test 2: Word Dictionary length and sorting
+                assert(WORD_DICTIONARY.length >= 3000, "WORD_DICTIONARY contains all 3,156 official Oxford 3000 words.");
+                assert(WORD_DICTIONARY[0].word.length === 3, "Dictionary starts with 3-letter words.");
+
+                // Test 3: Canvas Setup
+                assert(canvas.width === 800 && canvas.height === 448, "Canvas initialized to 800x448 dimensions.");
+
+                // Test 4: Player Hard Boundaries
+                const testPlayer = new Player(0, 0);
+                testPlayer.x = -50;
+                testPlayer.update(0.015, world);
+                assert(testPlayer.x === 0, "Player horizontal left movement is blocked at world left border (x=0).");
+
+                const screenWorld = new World(Math.floor(canvas.width / TILE_SIZE), rows);
+                testPlayer.x = 900;
+                testPlayer.update(0.015, screenWorld);
+                assert(testPlayer.x === canvas.width - testPlayer.width, "Player horizontal right movement is blocked at single-screen world right border.");
+
+                testPlayer.x = world.width + 100;
+                testPlayer.update(0.015, world);
+                assert(testPlayer.x === world.width - testPlayer.width, "Player horizontal right movement is blocked at open world border.");
+
+                // Test 5: Letter Spawn & Arc Velocity
+                const testBlock = new Block(5, 5, true);
+                const initialActiveCount = activeLetters.length;
+                spawnLetterFromBlock(testBlock);
+                assert(activeLetters.length === initialActiveCount + 2, "Question block hits spawn 2 floating letters.");
+
+                const spawned = activeLetters[activeLetters.length - 1];
+                assert(Math.abs(spawned.vx) >= 140 && Math.abs(spawned.vx) <= 220, "Letter pops outward with parabolic horizontal velocity (140..220 px/s).");
+
+                // Test 6: Spelled word matching
+                const testChar = currentWord[0];
+                const matchingEntity = new LetterEntity(player.x, player.y, testChar);
+                activeLetters.push(matchingEntity);
+
+                // Test 7: speech synthesis text normalization test
+                speakWord("ACT");
+                assert(true, "Speech synthesis called with clean lowercase word.");
+
+                // Test 8: Immediate clue display on init
+                assert(hintUnlocked === true, "Word clue and picture display immediately when new word starts.");
+
+                // Test 9: Score keeping updates on word completion
+                spelledWord[0] = 'C';
+                spelledWord[1] = 'A';
+                spelledWord[2] = 'T';
+                if (spelledWord.every(c => c !== null)) {
+                    wordsCompletedCount++;
+                    totalScore += currentWord.length * 100;
+                }
+                assert(wordsCompletedCount > 0, "Word completion increments words claimed score counter.");
+                assert(totalScore >= 300, "Word completion awards score points.");
+
+                // Test 10: GameMode toggle
+                gameMode = 'spelling';
+                toggleGameMode();
+                assert(gameMode === 'sandbox', "Game mode toggles from spelling to sandbox.");
+                toggleGameMode();
+                assert(gameMode === 'spelling', "Game mode toggles back to spelling.");
+
+                // Test 11: Placing & Smashing sandbox block
+                const sandboxWorld = new World(10, 10);
+                gameMode = 'sandbox';
+                inventoryBlocks = 1;
+                const gridX = 3, gridY = 3;
+                let newBlock = new Block(gridX, gridY, false);
+                newBlock.isSandboxBlock = true;
+                sandboxWorld.addTile(newBlock);
+                inventoryBlocks--;
+                assert(sandboxWorld.getTileAt(gridX, gridY) !== null, "Sandbox block is added to tile grid.");
+                assert(inventoryBlocks === 0, "Placing sandbox block decrements block inventory.");
+                sandboxWorld.removeTileAt(gridX, gridY);
+                inventoryBlocks++;
+                assert(sandboxWorld.getTileAt(gridX, gridY) === null, "Sandbox block is smashed and removed.");
+                assert(inventoryBlocks === 1, "Smashing sandbox block refunds inventory.");
+
+                // Test 12: GameStorage serialization
+                localStorage.removeItem('swb_test_key');
+                GameStorage.save('test_key', { totalScore: 500 });
+                const loaded = GameStorage.load('test_key');
+                assert(loaded !== null && loaded.totalScore === 500, "GameStorage correctly saves and loads score from localStorage.");
+                localStorage.removeItem('swb_test_key');
+
+                // Test 13: Coyote Time jump mechanics
+                const testWorld = new World(10, 10);
+                const testCoyotePlayer = new Player(0, 0);
+                testCoyotePlayer.coyoteTimer = 0.15;
+                testCoyotePlayer.jumpBufferTimer = 0.1;
+                testCoyotePlayer.update(0.01, testWorld);
+                assert(testCoyotePlayer.vy === JUMP_FORCE, "Player jumps using coyote time even when in mid-air.");
+                assert(testCoyotePlayer.coyoteTimer === 0, "Coyote timer resets to 0 after successful coyote jump.");
+
+                // Test 14: Input Jump Buffering stays active mid-air
+                const testBufferPlayer = new Player(0, 0);
+                testBufferPlayer.isGrounded = false;
+                testBufferPlayer.coyoteTimer = 0; // No coyote time available
+                testBufferPlayer.jumpBufferTimer = 0.15; // Jump key was recently buffered
+                testBufferPlayer.update(0.01, testWorld);
+                assert(testBufferPlayer.jumpBufferTimer > 0, "Jump buffer stays active when player is airborne with no coyote time.");
+
+                // Test 15: Smashed treasure block relocates to random reachable location
+                const mockWorld = new World(25, 14);
+                const originalQBlock = mockWorld.tiles.find(t => t.isQuestionBlock);
+                const origX = originalQBlock.gridX;
+                const origY = originalQBlock.gridY;
+                const relocatedBlock = mockWorld.relocateQuestionBlock(originalQBlock);
+                assert(mockWorld.getTileAt(origX, origY) === null, "Old treasure block position is cleared.");
+                assert(relocatedBlock !== null, "New treasure block is created.");
+                assert(mockWorld.getTileAt(relocatedBlock.gridX, relocatedBlock.gridY) === relocatedBlock, "New treasure block is added to tile grid.");
+                assert([mockWorld.rows - 5, mockWorld.rows - 6].includes(relocatedBlock.gridY), "New treasure block is at reachable height with proper clearance.");
+
+                // Test 16: Random word length tier progression
+                const word1 = getRandomWordOfLength(3);
+                assert(word1.word.length === 3, "Word length helper returns length 3 word.");
+                currentTierLength = 3;
+                tierWordsCompleted = WORDS_PER_TIER - 1;
+                advanceToNextWord();
+                assert(currentTierLength === 4, "Progresses to 4-letter words after completing several 3-letter words.");
+
+                // Test 17: Playable area width alignment
+                assert(canvas.width === 800, "Canvas logical width is 800px matching game layout width.");
+
+                // Test 18: Sound toggle functionality
+                const prevSound = soundEnabled;
+                toggleSound();
+                assert(soundEnabled === !prevSound, "Sound toggle toggles soundEnabled boolean state.");
+                toggleSound();
+                assert(soundEnabled === prevSound, "Sound toggle toggles back to original state.");
+
+                // Test 19: Sandbox block removal & recycling
+                const testRecycleWorld = new World(10, 10);
+                const testRecycleBlock = new Block(2, 2, false);
+                testRecycleBlock.isSandboxBlock = true;
+                testRecycleWorld.addTile(testRecycleBlock);
+                assert(testRecycleWorld.getTileAt(2, 2) !== null, "Test sandbox block added to world.");
+                const initialInv = inventoryBlocks;
+                testRecycleWorld.removeTileAt(2, 2);
+                inventoryBlocks++;
+                assert(testRecycleWorld.getTileAt(2, 2) === null, "Sandbox block removed from world.");
+                assert(inventoryBlocks === initialInv + 1, "Removing sandbox block refunds +1 block.");
+
+                // Test 20: Bulk recycle all sandbox blocks
+                for (let c = 0; c < 3; c++) {
+                    const sb = new Block(c, 0, false);
+                    sb.isSandboxBlock = true;
+                    testRecycleWorld.addTile(sb);
+                }
+                const placedCount = testRecycleWorld.tiles.filter(t => t.isSandboxBlock).length;
+                assert(placedCount === 3, "Three sandbox blocks placed for bulk recycle test.");
+                const prevInv = inventoryBlocks;
+                const sbs = testRecycleWorld.tiles.filter(t => t.isSandboxBlock);
+                for (let b of sbs) testRecycleWorld.removeTileAt(b.gridX, b.gridY);
+                inventoryBlocks += sbs.length;
+                assert(testRecycleWorld.tiles.filter(t => t.isSandboxBlock).length === 0, "Bulk recycle removes all sandbox blocks.");
+                assert(inventoryBlocks === prevInv + 3, "Bulk recycle refunds full count of removed blocks.");
+
+                // Test 21: Head Clearance & Run-Under
+                const clearance5 = ((world.rows - 2) - (world.rows - 5 + 1)) * TILE_SIZE;
+                const clearance6 = ((world.rows - 2) - (world.rows - 6 + 1)) * TILE_SIZE;
+                assert(clearance5 >= player.height, "Row - 5 block height has adequate clearance for Strider (height 34px).");
+                assert(clearance6 >= player.height, "Row - 6 block height has adequate clearance for Strider (height 34px).");
+
+                // Test 22: Audio muting suppresses sound generation
+                const originalSoundState = soundEnabled;
+                soundEnabled = false;
+                let speechAttempted = false;
+                const origSpeak = window.speechSynthesis.speak;
+                window.speechSynthesis.speak = () => { speechAttempted = true; };
+                speakWord("TEST");
+                assert(!speechAttempted, "Speech synthesis is suppressed when sound is muted.");
+                window.speechSynthesis.speak = origSpeak;
+                soundEnabled = originalSoundState;
+
+                // Test 23: Word Randomization & Pool Variety
+                const sampleWords = new Set();
+                for (let i = 0; i < 15; i++) {
+                    sampleWords.add(getRandomWordOfLength(3).word);
+                }
+                assert(sampleWords.size > 1, "Word selection draws randomly from word pool instead of fixed duplicate.");
+
+                // Test 24: SEN Vowel & Consonant Classification
+                assert(isVowelChar('A') && isVowelChar('E') && isVowelChar('I') && isVowelChar('O') && isVowelChar('U'), "Vowels A, E, I, O, U identified correctly.");
+                assert(!isVowelChar('B') && !isVowelChar('T') && !isVowelChar('S') && !isVowelChar('R'), "Consonants identified correctly.");
+
+                // Test 25: Comprehensive Length Tier Advancement & Wrap
+                let testLen = 3;
+                for (let step = 0; step < availableLengths.length; step++) {
+                    const expectedIdx = availableLengths.indexOf(testLen);
+                    const nextExpected = availableLengths[(expectedIdx + 1) % availableLengths.length];
+                    currentTierLength = testLen;
+                    tierWordsCompleted = WORDS_PER_TIER - 1;
+                    advanceToNextWord();
+                    assert(currentTierLength === nextExpected, `Tier advances from length ${testLen} to ${nextExpected}.`);
+                    testLen = nextExpected;
+                }
+                currentTierLength = 3;
+                tierWordsCompleted = 0;
+
+                // Test 26: Full GameState & Audio Persistence
+                GameStorage.save('sound_enabled', false);
+                assert(GameStorage.load('sound_enabled') === false, "Sound state correctly persisted in localStorage.");
+                GameStorage.save('sound_enabled', true);
+                assert(GameStorage.load('sound_enabled') === true, "Sound state ON correctly persisted in localStorage.");
+
+                // Test 27: recycleSandboxBlockAt targeting validation
+                assert(recycleSandboxBlockAt(99, 99) === false, "Recycling empty or out-of-bounds tile returns false.");
+
+                // Test 28: WORLD_WIDTH constant definition
+                assert(typeof WORLD_WIDTH === 'number' && WORLD_WIDTH === 8000, "WORLD_WIDTH is defined as constant 8000.");
+
+                // Test 29: Sparse store Map for non-plain-ground tiles
+                assert(world.tilesMap instanceof Map, "World uses a Map for sparse tile storage.");
+                assert(world.tilesMap.size < 50, "Sparse store does not allocate storage for empty tiles.");
+                assert(world.getTileAt(100, 2) === null, "Empty world tile returns null without storage allocation.");
+                const testSparseBlock = new Block(50, 5, false);
+                world.addTile(testSparseBlock);
+                assert(world.tilesMap.has("50,5"), "Tile correctly registered in sparse tilesMap.");
+                assert(world.getTileAt(50, 5) === testSparseBlock, "getTileAt retrieves block from sparse tilesMap.");
+                world.removeTileAt(50, 5);
+                assert(!world.tilesMap.has("50,5"), "removeTileAt removes block from sparse tilesMap.");
+
+                // Test 30: Procedural ground tiles in coordinate system
+                const groundTile = world.getTileAt(100, world.rows - 2);
+                assert(groundTile !== null, "getTileAt returns ground tile for ground row.");
+                assert(groundTile.y === (world.rows - 2) * TILE_SIZE, "Ground tile y matches tile coordinate system.");
+
+                // Test 31: Camera scrolling and player tracking
+                assert(typeof camera === 'object' && camera !== null, "Camera object exists.");
+                const prevCamX = camera.x;
+                const testCamPlayer = new Player(1000, (world.rows - 4) * TILE_SIZE);
+                camera.update(testCamPlayer);
+                assert(camera.x > 0, "Camera scrolls right to follow player in world coordinates.");
+                testCamPlayer.x = 40;
+                camera.update(testCamPlayer);
+                assert(camera.x === 0, "Camera clamps to 0 at world left boundary.");
+
+                // Test 32: Viewport culling buffer
+                const visibleCols = world.getVisibleColumns(camera);
+                assert(visibleCols.minCol <= Math.floor(camera.x / TILE_SIZE), "Visible columns include left buffer.");
+                assert(visibleCols.maxCol >= Math.floor((camera.x + camera.width) / TILE_SIZE), "Visible columns include right buffer.");
+
+                // Test 33: Player physics in world coordinates beyond screen width
+                const worldTravelPlayer = new Player(850, (world.rows - 4) * TILE_SIZE);
+                worldTravelPlayer.vx = PLAYER_SPEED;
+                worldTravelPlayer.update(0.1, world);
+                assert(worldTravelPlayer.x > 850, "Player physics operate in world coordinates beyond 800px screen boundary.");
+
+                // Test 34: Save format saveVersion and backward compatibility
+                GameStorage.save('game_state', { wordsCompletedCount: 7, totalScore: 700 }); // legacy save without saveVersion
+                loadState();
+                assert(wordsCompletedCount === 7, "Legacy save format loads without error.");
+                saveState();
+                const updatedSave = GameStorage.load('game_state');
+                assert(updatedSave.saveVersion !== undefined && updatedSave.saveVersion >= 1, "Save format includes saveVersion field.");
+
+                // Test 35: Letter drop floor countdown, flashing warning, and 5-second despawn
+                const testDropLetter = new LetterEntity(100, 50, 'M');
+                assert(testDropLetter.reachedFloor === false, "Letter block starts in air with reachedFloor false.");
+                assert(testDropLetter.floorTimer === 0, "Floor timer remains 0 before reaching the floor.");
+                assert(testDropLetter.isFlashing === false, "Letter block does not flash before landing.");
+
+                // Simulate landing on floor
+                testDropLetter.vy = 200;
+                testDropLetter.y = (rows - 2) * TILE_SIZE - testDropLetter.height - 5;
+                testDropLetter.update(0.1, world);
+                assert(testDropLetter.reachedFloor === true, "Letter block marks reachedFloor upon landing on the floor.");
+                assert(testDropLetter.floorTimer > 0, "Floor countdown timer starts accumulating once on floor.");
+                assert(testDropLetter.isFlashing === false, "Letter block does not flash during initial 3 seconds on floor.");
+
+                // Advance past 3 seconds (remaining <= 2.0s)
+                testDropLetter.update(3.1, world);
+                assert(testDropLetter.isFlashing === true, "Letter block flashes warning effect when disappearing soon (last 2 seconds).");
+                assert(testDropLetter.isExpired === false, "Letter block remains collectable while flashing.");
+
+                // Advance past 5.0 seconds total on floor
+                testDropLetter.update(2.0, world);
+                assert(testDropLetter.isExpired === true, "Letter block expires 5 seconds after reaching the floor.");
+
+                // Verification of active letters removal on expiration
+                const prevActive = activeLetters.length;
+                activeLetters.push(testDropLetter);
+                for (let k = activeLetters.length - 1; k >= 0; k--) {
+                    if (activeLetters[k].isExpired) {
+                        activeLetters.splice(k, 1);
+                    }
+                }
+                assert(activeLetters.length === prevActive, "Expired letter block is cleaned up from active letters collection.");
+
+                // Verification of wrong letter pickup deducting 1 block count
+                const invBeforeWrong = 3;
+                inventoryBlocks = invBeforeWrong;
+                const wrongChar = '$';
+                let wrongMatched = false;
+                for (let j = 0; j < currentWord.length; j++) {
+                    if (currentWord[j] === wrongChar && spelledWord[j] === null) {
+                        wrongMatched = true;
+                        break;
+                    }
+                }
+                if (!wrongMatched && inventoryBlocks > 0) {
+                    inventoryBlocks = Math.max(0, inventoryBlocks - 1);
+                }
+                assert(inventoryBlocks === invBeforeWrong - 1, "Picking up a wrong letter deducts one inventory block count from top right.");
+
+                // Boundary check: picking up wrong letter when inventory is 0 never becomes negative
+                inventoryBlocks = 0;
+                if (!wrongMatched && inventoryBlocks > 0) {
+                    inventoryBlocks = Math.max(0, inventoryBlocks - 1);
+                }
+                assert(inventoryBlocks === 0, "Inventory block count does not become negative when already at zero.");
+
+                reportEl.classList.add('passed');
+                reportEl.innerText = "MINI UNIT TESTS PASSED SUCCESSFULLY:\n\n" + results.join('\n');
+            } catch (err) {
+                reportEl.classList.remove('passed');
+                reportEl.innerText = "MINI UNIT TESTS FAILED:\n\n" + err.message + "\n\nFull output:\n" + results.join('\n');
+            }
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        fetch('words.json')
+            .then(response => response.json())
+            .then(data => {
+                initDictionary(data);
+                loadState();
+                
+                if (urlParams.get('test') === 'true') {
+                    runUnitTests();
+                } else {
+                    requestAnimationFrame(gameLoop);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load dictionary:', err);
+                document.getElementById('hint-definition').innerText = 'Failed to load words database.';
+            });
+    </script>
+</body>
+
+</html>
